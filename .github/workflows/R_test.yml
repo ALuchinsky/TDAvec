@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Test
 
 on:
@@ -9,31 +6,34 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   build:
-
     runs-on: macos-latest
 
-   steps:
+    strategy:
+      matrix:
+        r: [ 'release' ]
+
+    steps:
       - uses: actions/checkout@v3
 
-      - uses: r-lib/actions/setup-r@v2 # Sets up R
+      - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r }}
 
-      - uses: r-lib/actions/setup-r-dependencies@v2 # Installs R package dependencies
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache-version: 2
           extra-packages: |
             any::tidyverse
             any::knitr
+            any::devtools
+            any::testthat
 
-      - name: Run R code (Example)
+      - name: Install from CRAN
         run: |
-          Rscript -e "install.packages('TDAvec', repos='http://cran.us.r-project.org')"
-          Rscript -e "library('TDAvec'); options(rgl.useNULL=TRUE); devtools::test()"
-    
+          Rscript -e "install.packages('TDAvec', repos='https://cran.r-project.org')"
+
+      - name: Run tests
+        run: |
+          Rscript -e "options(rgl.useNULL=TRUE); devtools::test()"
